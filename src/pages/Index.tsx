@@ -72,11 +72,16 @@ const Index = () => {
             Join thousands of farmers and vendors already using AgroFresh GH to reduce waste and increase profits
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="secondary" className="text-lg px-8 py-6">
-              Join as Farmer
+            <Button size="lg" variant="secondary" className="text-lg px-8 py-6" asChild>
+              <Link to="/login">Join as Farmer</Link>
             </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-6 bg-white/10 border-white/30 text-white hover:bg-white/20">
-              Join as Vendor
+            <Button size="lg" variant="outline" className="text-lg px-8 py-6 bg-white/10 border-white/30 text-white hover:bg-white/20" asChild>
+              <Link to="/login">Join as Vendor</Link>
+            </Button>
+          </div>
+          <div className="mt-6">
+            <Button variant="ghost" className="text-white/80 hover:text-white" asChild>
+              <Link to="/admin">Admin Access</Link>
             </Button>
           </div>
         </div>
