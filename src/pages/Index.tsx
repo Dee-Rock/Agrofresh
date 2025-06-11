@@ -18,7 +18,7 @@ const Index = () => {
       <Features />
       
       {/* How it Works Section */}
-      <section className="py-20 bg-muted/30">
+      <section id="how-it-works" className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
@@ -74,10 +74,10 @@ const Index = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" variant="secondary" className="text-lg px-8 py-6" asChild>
-              <Link to="/login">Join as Farmer</Link>
+              <Link to="/farmers">Join as Farmer</Link>
             </Button>
             <Button size="lg" variant="outline" className="text-lg px-8 py-6 bg-white/10 border-white/30 text-white hover:bg-white/20" asChild>
-              <Link to="/login">Join as Vendor</Link>
+              <Link to="/buyers">Browse Marketplace</Link>
             </Button>
           </div>
           <div className="mt-6">
