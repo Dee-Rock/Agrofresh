@@ -100,7 +100,7 @@ const Farmers = () => {
               </div>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button variant="primary">
+                  <Button variant="default">
                     <Plus className="h-4 w-4 mr-2" />
                     Add New Crop
                   </Button>
