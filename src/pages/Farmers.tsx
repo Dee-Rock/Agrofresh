@@ -1,293 +1,300 @@
-
 import { useState } from "react";
-import { Plus, Edit, Trash2, Clock, DollarSign } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Plus, Package, TrendingUp, DollarSign, Calendar, Edit, Trash2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import Navigation from "@/components/Navigation";
+import BackgroundSlideshow from "@/components/BackgroundSlideshow";
 
 interface Crop {
-  id: string;
+  id: number;
   name: string;
+  category: string;
   quantity: number;
-  unit: string;
   price: number;
-  description: string;
-  harvestDate: string;
   expiryDate: string;
-  status: "available" | "sold" | "expired";
+  imageUrl: string;
 }
 
+const initialCrops: Crop[] = [
+  {
+    id: 1,
+    name: "Tomatoes",
+    category: "Vegetables",
+    quantity: 500,
+    price: 2.50,
+    expiryDate: "2024-08-15",
+    imageUrl: "https://images.unsplash.com/photo-1560807605-ba5a6bb7c24a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8dG9tYXRvfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60",
+  },
+  {
+    id: 2,
+    name: "Carrots",
+    category: "Vegetables",
+    quantity: 300,
+    price: 1.80,
+    expiryDate: "2024-08-20",
+    imageUrl: "https://images.unsplash.com/photo-1598148502549-5609c14c8652?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Y2Fycm90fGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60",
+  },
+  {
+    id: 3,
+    name: "Bananas",
+    category: "Fruits",
+    quantity: 800,
+    price: 0.90,
+    expiryDate: "2024-08-10",
+    imageUrl: "https://images.unsplash.com/photo-1587132172749-727532918f0d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8YmFuYW5hfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60",
+  },
+];
+
 const Farmers = () => {
-  const [crops, setCrops] = useState<Crop[]>([
-    {
-      id: "1",
-      name: "Tomatoes",
-      quantity: 50,
-      unit: "kg",
-      price: 8.50,
-      description: "Fresh organic tomatoes",
-      harvestDate: "2024-01-15",
-      expiryDate: "2024-01-22",
-      status: "available"
-    },
-    {
-      id: "2",
-      name: "Onions",
-      quantity: 30,
-      unit: "kg",
-      price: 6.00,
-      description: "Red onions, well dried",
-      harvestDate: "2024-01-10",
-      expiryDate: "2024-01-17",
-      status: "available"
-    }
-  ]);
-  
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newCrop, setNewCrop] = useState({
+  const [crops, setCrops] = useState<Crop[]>(initialCrops);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newCrop, setNewCrop] = useState<Omit<Crop, "id">>({
     name: "",
-    quantity: "",
-    unit: "kg",
-    price: "",
-    description: "",
-    harvestDate: "",
+    category: "Vegetables",
+    quantity: 0,
+    price: 0,
+    expiryDate: "",
+    imageUrl: "",
   });
 
-  const handleAddCrop = () => {
-    if (newCrop.name && newCrop.quantity && newCrop.price) {
-      const expiryDate = new Date(newCrop.harvestDate);
-      expiryDate.setDate(expiryDate.getDate() + 7);
-      
-      const crop: Crop = {
-        id: Date.now().toString(),
-        name: newCrop.name,
-        quantity: Number(newCrop.quantity),
-        unit: newCrop.unit,
-        price: Number(newCrop.price),
-        description: newCrop.description,
-        harvestDate: newCrop.harvestDate,
-        expiryDate: expiryDate.toISOString().split('T')[0],
-        status: "available"
-      };
-      
-      setCrops([...crops, crop]);
-      setNewCrop({
-        name: "",
-        quantity: "",
-        unit: "kg",
-        price: "",
-        description: "",
-        harvestDate: "",
-      });
-      setShowAddForm(false);
-    }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setNewCrop(prev => ({ ...prev, [name]: value }));
   };
 
-  const deleteCrop = (id: string) => {
+  const handleSelectChange = (value: string) => {
+    setNewCrop(prev => ({ ...prev, category: value }));
+  };
+
+  const handleAddCrop = () => {
+    const newId = crops.length > 0 ? Math.max(...crops.map(crop => crop.id)) + 1 : 1;
+    setCrops([...crops, { id: newId, ...newCrop }]);
+    setNewCrop({ name: "", category: "Vegetables", quantity: 0, price: 0, expiryDate: "", imageUrl: "" });
+    setIsDialogOpen(false);
+  };
+
+  const handleDeleteCrop = (id: number) => {
     setCrops(crops.filter(crop => crop.id !== id));
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "available":
-        return "bg-green-100 text-green-800";
-      case "sold":
-        return "bg-blue-100 text-blue-800";
-      case "expired":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-muted/30 p-4">
-      <div className="container mx-auto max-w-6xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Farmer Dashboard</h1>
-          <p className="text-muted-foreground">Manage your crops and track sales</p>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Listings</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{crops.filter(c => c.status === "available").length}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">GH₵ 1,240</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Expiring Soon</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">2</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Add Crop Button */}
-        <div className="mb-6">
-          <Button onClick={() => setShowAddForm(!showAddForm)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add New Crop
-          </Button>
-        </div>
-
-        {/* Add Crop Form */}
-        {showAddForm && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Add New Crop</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Crop Name</Label>
-                  <Input
-                    id="name"
-                    value={newCrop.name}
-                    onChange={(e) => setNewCrop({...newCrop, name: e.target.value})}
-                    placeholder="e.g., Tomatoes"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="quantity">Quantity</Label>
-                  <Input
-                    id="quantity"
-                    type="number"
-                    value={newCrop.quantity}
-                    onChange={(e) => setNewCrop({...newCrop, quantity: e.target.value})}
-                    placeholder="e.g., 50"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="unit">Unit</Label>
-                  <Select value={newCrop.unit} onValueChange={(value) => setNewCrop({...newCrop, unit: value})}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="kg">Kilogram (kg)</SelectItem>
-                      <SelectItem value="bags">Bags</SelectItem>
-                      <SelectItem value="pieces">Pieces</SelectItem>
-                      <SelectItem value="bunches">Bunches</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label htmlFor="price">Price per Unit (GH₵)</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    step="0.01"
-                    value={newCrop.price}
-                    onChange={(e) => setNewCrop({...newCrop, price: e.target.value})}
-                    placeholder="e.g., 8.50"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="harvestDate">Harvest Date</Label>
-                  <Input
-                    id="harvestDate"
-                    type="date"
-                    value={newCrop.harvestDate}
-                    onChange={(e) => setNewCrop({...newCrop, harvestDate: e.target.value})}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Input
-                    id="description"
-                    value={newCrop.description}
-                    onChange={(e) => setNewCrop({...newCrop, description: e.target.value})}
-                    placeholder="Brief description of the crop"
-                  />
-                </div>
+    <div className="min-h-screen bg-background relative">
+      <BackgroundSlideshow />
+      <div className="relative z-10">
+        <Navigation />
+        
+        <div className="container mx-auto px-4 py-8">
+          {/* Header */}
+          <div className="bg-card/40 backdrop-blur-sm rounded-lg p-6 mb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">Your Farm Dashboard</h1>
+                <p className="text-muted-foreground">Manage your crops and sales</p>
               </div>
-              
-              <div className="flex gap-2 mt-4">
-                <Button onClick={handleAddCrop}>Add Crop</Button>
-                <Button variant="outline" onClick={() => setShowAddForm(false)}>Cancel</Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Crops List */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {crops.map((crop) => (
-            <Card key={crop.id}>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-lg">{crop.name}</CardTitle>
-                    <CardDescription>{crop.description}</CardDescription>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="primary">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add New Crop
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Add New Crop</DialogTitle>
+                    <DialogDescription>
+                      Add a new crop to your inventory.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="name" className="text-right">
+                        Name
+                      </Label>
+                      <Input id="name" name="name" value={newCrop.name} onChange={handleInputChange} className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="category" className="text-right">
+                        Category
+                      </Label>
+                      <Select onValueChange={handleSelectChange} defaultValue={newCrop.category} >
+                        <SelectTrigger className="col-span-3">
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Vegetables">Vegetables</SelectItem>
+                          <SelectItem value="Fruits">Fruits</SelectItem>
+                          <SelectItem value="Grains">Grains</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="quantity" className="text-right">
+                        Quantity
+                      </Label>
+                      <Input type="number" id="quantity" name="quantity" value={String(newCrop.quantity)} onChange={handleInputChange} className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="price" className="text-right">
+                        Price
+                      </Label>
+                      <Input type="number" id="price" name="price" value={String(newCrop.price)} onChange={handleInputChange} className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="expiryDate" className="text-right">
+                        Expiry Date
+                      </Label>
+                      <Input type="date" id="expiryDate" name="expiryDate" value={newCrop.expiryDate} onChange={handleInputChange} className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="imageUrl" className="text-right">
+                        Image URL
+                      </Label>
+                      <Input type="url" id="imageUrl" name="imageUrl" value={newCrop.imageUrl} onChange={handleInputChange} className="col-span-3" />
+                    </div>
                   </div>
-                  <Badge className={getStatusColor(crop.status)}>
-                    {crop.status}
-                  </Badge>
-                </div>
+                  <Button type="submit" onClick={handleAddCrop}>Add Crop</Button>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <Card className="bg-card/40 backdrop-blur-sm border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Package className="h-4 w-4" />
+                  <span>Total Crops</span>
+                </CardTitle>
+                <CardDescription>All your listed crops</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Quantity:</span>
-                    <span className="font-medium">{crop.quantity} {crop.unit}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Price:</span>
-                    <span className="font-medium">GH₵ {crop.price}/{crop.unit}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Harvest:</span>
-                    <span className="font-medium">{crop.harvestDate}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Expires:</span>
-                    <span className="font-medium">{crop.expiryDate}</span>
-                  </div>
-                </div>
-                
-                <div className="flex gap-2 mt-4">
-                  <Button size="sm" variant="outline" className="flex-1">
-                    <Edit className="h-3 w-3 mr-1" />
-                    Edit
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="destructive" 
-                    onClick={() => deleteCrop(crop.id)}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
+                <div className="text-2xl font-bold">{crops.length}</div>
+              </CardContent>
+            </Card>
+            <Card className="bg-card/40 backdrop-blur-sm border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <TrendingUp className="h-4 w-4" />
+                  <span>Total Quantity</span>
+                </CardTitle>
+                <CardDescription>Total quantity of all crops</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{crops.reduce((acc, crop) => acc + crop.quantity, 0)}</div>
+              </CardContent>
+            </Card>
+            <Card className="bg-card/40 backdrop-blur-sm border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <DollarSign className="h-4 w-4" />
+                  <span>Average Price</span>
+                </CardTitle>
+                <CardDescription>Average price per crop</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {crops.length > 0 ? (crops.reduce((acc, crop) => acc + crop.price, 0) / crops.length).toFixed(2) : "0.00"}
                 </div>
               </CardContent>
             </Card>
-          ))}
+            <Card className="bg-card/40 backdrop-blur-sm border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Calendar className="h-4 w-4" />
+                  <span>Expiring Soon</span>
+                </CardTitle>
+                <CardDescription>Crops expiring in the next 7 days</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {crops.filter(crop => {
+                    const expiry = new Date(crop.expiryDate);
+                    const now = new Date();
+                    const diff = expiry.getTime() - now.getTime();
+                    const days = Math.ceil(diff / (1000 * 3600 * 24));
+                    return days <= 7;
+                  }).length}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="bg-card/40 backdrop-blur-sm rounded-lg p-6 mb-8">
+            <h2 className="text-lg font-semibold mb-4 text-foreground">Quick Actions</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Button variant="secondary" className="flex items-center space-x-2">
+                <TrendingUp className="h-4 w-4" />
+                <span>View Sales Report</span>
+              </Button>
+              <Button variant="secondary" className="flex items-center space-x-2">
+                <DollarSign className="h-4 w-4" />
+                <span>Request Payment</span>
+              </Button>
+              <Button variant="secondary" className="flex items-center space-x-2">
+                <Calendar className="h-4 w-4" />
+                <span>Update Availability</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* Recent Crops */}
+          <div className="bg-card/40 backdrop-blur-sm rounded-lg p-6">
+            <h2 className="text-lg font-semibold mb-4 text-foreground">Recent Crops</h2>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-border">
+                <thead>
+                  <tr>
+                    <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">Name</th>
+                    <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">Category</th>
+                    <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">Quantity</th>
+                    <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">Price</th>
+                    <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">Expiry Date</th>
+                    <th className="px-4 py-2 text-right text-sm font-medium text-muted-foreground">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {crops.map((crop) => (
+                    <tr key={crop.id}>
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="h-10 w-10 rounded-full overflow-hidden mr-2">
+                            <img src={crop.imageUrl} alt={crop.name} className="object-cover w-full h-full" />
+                          </div>
+                          <div className="text-sm font-medium text-foreground">{crop.name}</div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-muted-foreground">{crop.category}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-muted-foreground">{crop.quantity}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-muted-foreground">{crop.price}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-sm text-muted-foreground">{crop.expiryDate}</td>
+                      <td className="px-4 py-2 whitespace-nowrap text-right">
+                        <div className="flex items-center justify-end space-x-2">
+                          <Button variant="ghost" size="sm">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDeleteCrop(crop.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>
